@@ -46,3 +46,7 @@ De website gebruikt relatieve paden en is geschikt voor een GitHub Pages project
 ## Navigatiegedrag
 
 Navigatie naar een andere pagina begint direct bovenaan zonder een lange terugscrollanimatie. De animaties binnen de pagina blijven behouden.
+
+### v4: Hero-cijfers
+
+Hero-cijfers lopen nu op en af in stapjes van maximaal 1 per animatietick (65 ms). De bestaande lichtanimatie en scrolltiming zijn niet aangepast.

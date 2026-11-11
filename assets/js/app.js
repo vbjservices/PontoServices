@@ -276,6 +276,27 @@ function initLightingScene(scope){
  let raf=0,active=true;
  const clamp=x=>Math.max(0,Math.min(1,x));
  const smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
+ const counters=[...scene.querySelectorAll('[data-count-to]')];
+ let counterRaf=0;
+ let counterLastTick=0;
+ const counterValues=new Map(counters.map(el=>[el,0]));
+ const animateCounters=(now=performance.now())=>{
+  if(!active)return;
+  if(now-counterLastTick<65){if(!counterRaf)counterRaf=requestAnimationFrame(tickCounters);return}
+  counterLastTick=now;
+  let pending=false;
+  for(const el of counters){
+   const target=Number(el.dataset.counterTarget||0);
+   const current=counterValues.get(el)||0;
+   const next=current+Math.sign(target-current); // No jumps larger than 1.
+   counterValues.set(el,next);
+   const str=next+(el.dataset.countSuffix||'');
+   if(el.textContent!==str)el.textContent=str;
+   if(next!==target)pending=true;
+  }
+  if(pending&&!counterRaf)counterRaf=requestAnimationFrame(tickCounters);
+ };
+ const tickCounters=now=>{counterRaf=0;animateCounters(now)};
  const update=()=>{
   raf=0;if(!active)return;
   const rect=scene.getBoundingClientRect();
@@ -298,7 +319,13 @@ function initLightingScene(scope){
   scene.style.setProperty('--ponto-story-y',((1-story)*85-Math.max(0,p-.58)*85).toFixed(1)+'px');
   scene.style.setProperty('--ponto-stats-opacity',stats.toFixed(4));
   scene.style.setProperty('--ponto-stats-y',((1-stats)*65-Math.max(0,p-.78)*55).toFixed(1)+'px');
-  scene.querySelectorAll('[data-count-to]').forEach(el=>{const goal=Number(el.dataset.countTo);const t=smooth((p-.57)/.28);const value=Math.min(goal,Math.round(goal*t));const suffix=el.dataset.countSuffix||'';const str=value+suffix;if(el.textContent!==str)el.textContent=str});
+  // Scroll sets the target, but each frame only advances one number at a time.
+  scene.querySelectorAll('[data-count-to]').forEach(el=>{
+   const goal=Number(el.dataset.countTo);
+   const t=smooth((p-.57)/.28);
+   el.dataset.counterTarget=String(Math.min(goal,Math.round(goal*t)));
+  });
+  animateCounters();
   scene.style.setProperty('--light-text-opacity',Math.max(0,1-smooth((p-.08)/.23)).toFixed(3));
   const hint=scene.querySelector('.architect-scroll');
   if(hint)hint.style.pointerEvents=p>.005?'none':'auto';
@@ -307,7 +334,7 @@ function initLightingScene(scope){
  window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('resize',schedule,{passive:true});
  update();
- lightingCleanup=()=>{active=false;window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);if(raf)cancelAnimationFrame(raf)};
+ lightingCleanup=()=>{active=false;window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);if(raf)cancelAnimationFrame(raf);if(counterRaf)cancelAnimationFrame(counterRaf)};
 }
 
 function pontoSyncNavigation(page){
