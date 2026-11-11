@@ -109,15 +109,16 @@ function initReveals(scope){
  if(revealObserver)revealObserver.disconnect();
  const els=[...scope.querySelectorAll('.reveal')];
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const variants=['rv-rise','rv-soft','rv-zoom','rv-left','rv-right'];
+ const variants=['rv-rise','rv-fade','rv-zoom','rv-left','rv-right'];
  els.forEach((el,i)=>{
-  el.classList.remove('visible',...variants);
+  el.classList.remove('visible',...variants,'rv-soft');
   let variant=variants[i%variants.length];
   if(el.classList.contains('photo-frame'))variant=i%2?'rv-right':'rv-left';
   else if(el.classList.contains('feature'))variant='rv-zoom';
   else if(el.classList.contains('benefit'))variant='rv-soft';
   else if(el.classList.contains('step'))variant=i%2?'rv-right':'rv-left';
-  else if(el.classList.contains('review'))variant='rv-rise';
+  else if(el.classList.contains('review'))variant='rv-fade';
+  else if(el.matches('.eyebrow,.lead,.editorial-lede'))variant='rv-fade';
   el.classList.add(variant);
   let group=el.parentElement;
   let siblings=[...group.children].filter(e=>e.classList.contains('reveal'));
@@ -217,7 +218,7 @@ function initScrollMotion(scope){
   const windowEl=document.createElement('span');windowEl.className='scroll-text-window';
   const inner=document.createElement('span');inner.className='scroll-text-inner';
   while(el.firstChild)inner.appendChild(el.firstChild);
-  windowEl.appendChild(inner);el.appendChild(windowEl);textNodes.push({host:el,inner});
+  inner.style.setProperty('--text-shift','16px');inner.style.setProperty('--text-opacity','.28');inner.style.setProperty('--text-blur','2px');windowEl.appendChild(inner);el.appendChild(windowEl);textNodes.push({host:el,inner});
  });
  // Use progressive scroll position rather than discrete time-based text animations.
  let raf=0,active=true;
@@ -244,14 +245,16 @@ function initScrollMotion(scope){
    heroCopy.style.opacity=String(Math.max(.08,1-portion*.92));
    if(heroTop){heroTop.style.translate=`0px ${Math.round(portion*-50)}px`;heroTop.style.opacity=String(Math.max(0,1-portion*1.3))}
   }
+  // Headings reveal once, no continuous wobble from scroll position.
   textNodes.forEach(({host,inner})=>{
+   if(inner.dataset.revealed)return;
    const r=host.getBoundingClientRect();
-   if(r.bottom< -100||r.top>vh+100)return;
-   const p=Math.max(0,Math.min(1,(vh*.90-r.top)/(vh*.32)));
-   const eased=1-Math.pow(1-p,2.2);
-   inner.style.setProperty('--text-shift',`${((1-eased)*22).toFixed(1)}px`);
-   inner.style.setProperty('--text-opacity',(0.48+0.52*eased).toFixed(3));
-   inner.style.setProperty('--text-blur',`${((1-eased)*1.8).toFixed(2)}px`);
+   if(r.top<vh*.9 && r.bottom>0){
+    inner.dataset.revealed='true';
+    inner.style.setProperty('--text-shift','0px');
+    inner.style.setProperty('--text-opacity','1');
+    inner.style.setProperty('--text-blur','0px');
+   }
   });
  }
  function schedule(){if(active&&!raf)raf=requestAnimationFrame(update)}
@@ -279,24 +282,24 @@ function initLightingScene(scope){
   const distance=Math.max(1,scene.offsetHeight-window.innerHeight);
   const p=clamp(-rect.top/distance);
   // Frame 1: lights off; frame 2: partially lit; frame 3: lights fully on.
-  const second=smooth(p/.19);
-  const third=smooth((p-.17)/.26);
+  const second=smooth(p/.27);
+  const third=smooth((p-.24)/.31);
   scene.style.setProperty('--light-second',second.toFixed(4));
   scene.style.setProperty('--light-third',third.toFixed(4));
   scene.style.setProperty('--light-parallax-y',(-p*68).toFixed(1)+'px');
   scene.style.setProperty('--light-text-y',(-p*100).toFixed(1)+'px');
   scene.style.setProperty('--light-text-opacity',Math.max(.18,1-p*.8).toFixed(3));
-  scene.style.setProperty('--light-kicker-opacity',(1-smooth((p-.2)/.35)).toFixed(3));
+  scene.style.setProperty('--light-kicker-opacity',(1-smooth((p-.18)/.36)).toFixed(3));
   scene.style.setProperty('--light-scroll-opacity',(1-smooth(p/.025)).toFixed(3));
   // Content stays on the same illuminated photograph; sections no longer interrupt the hero.
-  const story=smooth((p-.17)/.19);
-  const stats=smooth((p-.34)/.18);
+  const story=smooth((p-.29)/.22);
+  const stats=smooth((p-.55)/.20);
   scene.style.setProperty('--ponto-story-opacity',story.toFixed(4));
-  scene.style.setProperty('--ponto-story-y',((1-story)*72-Math.max(0,p-.37)*105).toFixed(1)+'px');
+  scene.style.setProperty('--ponto-story-y',((1-story)*85-Math.max(0,p-.58)*85).toFixed(1)+'px');
   scene.style.setProperty('--ponto-stats-opacity',stats.toFixed(4));
-  scene.style.setProperty('--ponto-stats-y',((1-stats)*55-Math.max(0,p-.54)*56).toFixed(1)+'px');
-  scene.querySelectorAll('[data-count-to]').forEach(el=>{const goal=Number(el.dataset.countTo);const t=smooth((p-.33)/.26);const value=Math.min(goal,Math.round(goal*t));const suffix=el.dataset.countSuffix||'';const str=value+suffix;if(el.textContent!==str)el.textContent=str});
-  scene.style.setProperty('--light-text-opacity',Math.max(0,1-smooth((p-.04)/.17)).toFixed(3));
+  scene.style.setProperty('--ponto-stats-y',((1-stats)*65-Math.max(0,p-.78)*55).toFixed(1)+'px');
+  scene.querySelectorAll('[data-count-to]').forEach(el=>{const goal=Number(el.dataset.countTo);const t=smooth((p-.57)/.28);const value=Math.min(goal,Math.round(goal*t));const suffix=el.dataset.countSuffix||'';const str=value+suffix;if(el.textContent!==str)el.textContent=str});
+  scene.style.setProperty('--light-text-opacity',Math.max(0,1-smooth((p-.08)/.23)).toFixed(3));
   const hint=scene.querySelector('.architect-scroll');
   if(hint)hint.style.pointerEvents=p>.005?'none':'auto';
  };
@@ -322,37 +325,24 @@ let homeMotionCleanup=null;
 function initHomeEditorialMotion(scope){
  if(homeMotionCleanup){homeMotionCleanup();homeMotionCleanup=null}
  const elements=[...scope.querySelectorAll('[data-home-animate]')];
+ elements.forEach(el=>{if(el.matches('.eyebrow,.lead,.home-photo-note')||el.classList.contains('home-review-motion'))el.classList.add('home-fade')});
  if(!elements.length)return;
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(reduced || !('IntersectionObserver' in window)){
   elements.forEach(el=>{el.classList.add('home-in-view');el.style.setProperty('--home-drift','0px')});
   return;
  }
- let active=true,raf=0;
  const observer=new IntersectionObserver(entries=>{
-  for(const entry of entries){if(entry.isIntersecting){entry.target.classList.add('home-in-view');observer.unobserve(entry.target)}}
+  for(const entry of entries){
+   if(!entry.isIntersecting)continue;
+   entry.target.classList.add('home-in-view');
+   observer.unobserve(entry.target);
+  }
  },{threshold:.12,rootMargin:'0px 0px -35px 0px'});
  elements.forEach(el=>observer.observe(el));
- // Gentle continuous offset as the visitor moves past a section, independent of entrance animation.
- const update=()=>{
-  raf=0;if(!active)return;
-  const vh=window.innerHeight||800;
-  elements.forEach(el=>{
-   if(!el.classList.contains('home-in-view'))return;
-   const r=el.getBoundingClientRect();
-   if(r.bottom<0||r.top>vh)return;
-   const position=(r.top+r.height*.5-vh*.5)/vh;
-   const drift=Math.max(-26,Math.min(26,-position*27));
-   el.style.setProperty('--home-drift',drift.toFixed(1)+'px');
-  });
- };
- const schedule=()=>{if(!raf&&active)raf=requestAnimationFrame(update)};
- window.addEventListener('scroll',schedule,{passive:true});
- window.addEventListener('resize',schedule,{passive:true});
- update();
- homeMotionCleanup=()=>{active=false;observer.disconnect();window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);if(raf)cancelAnimationFrame(raf)};
+ homeMotionCleanup=()=>observer.disconnect();
 }
 
-function go(page){let html;if(page==='home')html=home();else if(page==='particulier')html=listing(privateServices,'Onze particuliere diensten','Van een complete renovatie tot een aanbouw of extra verdieping.','PARTICULIER');else if(page==='zakelijk')html=listing(bizServices,'Zakelijke verbouwingen','Van horeca tot kantoor en retail: een passende ruimte voor uw organisatie.','ZAKELIJK');else if(page==='projecten')html=projectPage();else if(page==='werkwijze')html=process();else if(page==='over')html=about();else if(page==='experience')html=experience();else if(page==='reviews')html=section('Reviews van onze klanten','Ervaringen met Ponto Services en hun bouw- en renovatieprojecten.','KLANTERVARINGEN')+`<section class="section"><div class="wrap"><div class="review-feature reveal rv-zoom"><div class="review-feature-grid"><div><div class="eyebrow" style="color:#ffd45f">ERVARINGEN UIT DE PRAKTIJK</div><p>‘We zijn erg blij met het resultaat en helemaal tevreden over het proces.’</p><strong>— Michael en Kristin</strong></div><div class="review-showcase-aside"><span class="review-showcase-label">WAAR KLANTEN OVER VERTELLEN</span><div class="review-showcase-line">Persoonlijke begeleiding <span>↗</span></div><div class="review-showcase-line">Duidelijke communicatie <span>↗</span></div><div class="review-showcase-line">Zorgvuldige afwerking <span>↗</span></div></div></div></div><div class="review-intro"><div><div class="eyebrow reveal">KLANTVERHALEN</div><h2 class="h2 reveal">Wat opdrachtgevers waarderen.</h2><p class="lead reveal">Van heldere communicatie en planning tot vakwerk in de uitvoering: deze reacties geven een indruk van de samenwerking met Ponto Services.</p></div><aside class="review-note reveal rv-right"><div class="eyebrow">WAT OPVALT</div><h3>Terugkerende thema’s in de reviews</h3><ul><li>Duidelijke communicatie gedurende het traject</li><li>Tevredenheid over resultaat en afwerking</li><li>Waardering voor planning en samenwerking</li></ul></aside></div><div class="reviews">${reviews.map(review).join('')}</div></div></section>`+cta();else if(page==='contact')html=contact();else if(page.startsWith('detail-'))html=details(page.substring(7));else if(page.startsWith('project-'))html=projectDetail(Number(page.substring(8)));else html=home();app.innerHTML=`<div class="fade">${html}</div>`;document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));document.getElementById('links').classList.remove('open');history.replaceState({},'',location.pathname+'#'+page);window.scrollTo({top:0,behavior:'smooth'});initReveals(app);initRoadmapSequence(app);initScrollMotion(app);initLightingScene(app);initHomeEditorialMotion(app);pontoSyncNavigation(page)}
+function go(page){window.scrollTo({top:0,left:0,behavior:'instant'});let html;if(page==='home')html=home();else if(page==='particulier')html=listing(privateServices,'Onze particuliere diensten','Van een complete renovatie tot een aanbouw of extra verdieping.','PARTICULIER');else if(page==='zakelijk')html=listing(bizServices,'Zakelijke verbouwingen','Van horeca tot kantoor en retail: een passende ruimte voor uw organisatie.','ZAKELIJK');else if(page==='projecten')html=projectPage();else if(page==='werkwijze')html=process();else if(page==='over')html=about();else if(page==='experience')html=experience();else if(page==='reviews')html=section('Reviews van onze klanten','Ervaringen met Ponto Services en hun bouw- en renovatieprojecten.','KLANTERVARINGEN')+`<section class="section"><div class="wrap"><div class="review-feature reveal rv-zoom"><div class="review-feature-grid"><div><div class="eyebrow" style="color:#ffd45f">ERVARINGEN UIT DE PRAKTIJK</div><p>‘We zijn erg blij met het resultaat en helemaal tevreden over het proces.’</p><strong>— Michael en Kristin</strong></div><div class="review-showcase-aside"><span class="review-showcase-label">WAAR KLANTEN OVER VERTELLEN</span><div class="review-showcase-line">Persoonlijke begeleiding <span>↗</span></div><div class="review-showcase-line">Duidelijke communicatie <span>↗</span></div><div class="review-showcase-line">Zorgvuldige afwerking <span>↗</span></div></div></div></div><div class="review-intro"><div><div class="eyebrow reveal">KLANTVERHALEN</div><h2 class="h2 reveal">Wat opdrachtgevers waarderen.</h2><p class="lead reveal">Van heldere communicatie en planning tot vakwerk in de uitvoering: deze reacties geven een indruk van de samenwerking met Ponto Services.</p></div><aside class="review-note reveal rv-right"><div class="eyebrow">WAT OPVALT</div><h3>Terugkerende thema’s in de reviews</h3><ul><li>Duidelijke communicatie gedurende het traject</li><li>Tevredenheid over resultaat en afwerking</li><li>Waardering voor planning en samenwerking</li></ul></aside></div><div class="reviews">${reviews.map(review).join('')}</div></div></section>`+cta();else if(page==='contact')html=contact();else if(page.startsWith('detail-'))html=details(page.substring(7));else if(page.startsWith('project-'))html=projectDetail(Number(page.substring(8)));else html=home();app.innerHTML=`<div class="fade">${html}</div>`;document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===page));document.getElementById('links').classList.remove('open');history.replaceState({},'',location.pathname+'#'+page);initReveals(app);initRoadmapSequence(app);initScrollMotion(app);initLightingScene(app);initHomeEditorialMotion(app);pontoSyncNavigation(page)}
 function filterProjects(type,btn){document.querySelectorAll('.filter').forEach(e=>e.classList.remove('active'));btn.classList.add('active');document.getElementById('project-grid').innerHTML=projects.map((x,i)=>({x,i})).filter(o=>type==='all'||o.x.group===type).map(o=>card(o.x,'project-'+o.i)).join('');initReveals(document.getElementById('project-grid'))}
 function sendEmail(e){e.preventDefault();const get=id=>document.getElementById(id).value;const subject=encodeURIComponent(get('subject')+' — '+get('name'));const body=encodeURIComponent('Naam: '+get('name')+'\nE-mail: '+get('email')+'\nTelefoon: '+get('phone')+'\n\n'+get('message'));window.location.href='mailto:info@pontoservices.nl?subject='+subject+'&body='+body}window.addEventListener('hashchange',()=>{let p=location.hash.slice(1);if(p)go(p)});go(location.hash.slice(1)||'home');

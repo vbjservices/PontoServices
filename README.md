@@ -34,3 +34,15 @@ De website gebruikt relatieve paden en is geschikt voor een GitHub Pages project
 - Een contactformulier kan een e-mailclient openen, maar heeft geen serverbackend.
 - Beeldmateriaal en merkassets: controleer toestemming/rechten voordat je de repository openbaar publiceert.
 - De oorspronkelijke projectscreenshots kunnen een lagere resolutie hebben dan de echte projectfotografie.
+
+## Laatste wijziging — rustigere scroll storytelling
+
+- Hero sticky-scroll verlengd naar **235svh** op desktop en **205svh** op mobiel.
+- Verlichting, hero-kop en kerncijfers zijn over een langer scrolltraject verdeeld.
+- Korte teksten gebruiken vaker een zachte fade-in.
+- Tekstreveals spelen eenmaal af tijdens een paginaweergave en bewegen daarna niet opnieuw bij scrollen.
+- De route-indicator bij **Onze werkwijze** blijft interactief gekoppeld aan het scrollen.
+
+## Navigatiegedrag
+
+Navigatie naar een andere pagina begint direct bovenaan zonder een lange terugscrollanimatie. De animaties binnen de pagina blijven behouden.
