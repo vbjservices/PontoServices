@@ -1,0 +1,57 @@
+[
+  {
+    "file": "assets/images/image-01.png",
+    "dimensions": "1000×486",
+    "bytes": 313525
+  },
+  {
+    "file": "assets/images/image-02.jpg",
+    "dimensions": "780×200",
+    "bytes": 31368
+  },
+  {
+    "file": "assets/images/image-03.jpg",
+    "dimensions": "715×432",
+    "bytes": 71303
+  },
+  {
+    "file": "assets/images/image-04.jpg",
+    "dimensions": "1030×440",
+    "bytes": 59598
+  },
+  {
+    "file": "assets/images/image-05.jpg",
+    "dimensions": "925×190",
+    "bytes": 16377
+  },
+  {
+    "file": "assets/images/image-06.jpg",
+    "dimensions": "400×510",
+    "bytes": 33556
+  },
+  {
+    "file": "assets/images/image-07.jpg",
+    "dimensions": "400×510",
+    "bytes": 31296
+  },
+  {
+    "file": "assets/images/image-08.jpg",
+    "dimensions": "400×510",
+    "bytes": 32566
+  },
+  {
+    "file": "assets/images/image-09.webp",
+    "dimensions": "1672×941",
+    "bytes": 142302
+  },
+  {
+    "file": "assets/images/image-10.webp",
+    "dimensions": "1672×941",
+    "bytes": 140690
+  },
+  {
+    "file": "assets/images/image-11.webp",
+    "dimensions": "1672×941",
+    "bytes": 166542
+  }
+]
